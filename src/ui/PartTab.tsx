@@ -210,7 +210,7 @@ function Results({
             value={part.vOverride ?? ''}
             onChange={(e) => updatePart({ vOverride: e.target.value ? Number(e.target.value) : null })}
           >
-            <option value="">Auto (V{a.v})</option>
+            <option value="">V{a.v} auto</option>
             {machine.vOpenings.map((v) => (
               <option key={v} value={v}>
                 V{v}

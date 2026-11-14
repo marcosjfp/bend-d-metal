@@ -65,6 +65,8 @@ type Split = 'slas' | 'llas' | 'h' | 'v'
 interface Heuristic {
   score: Score
   split: Split
+  /** first: first sheet with room; best: sheet with the tightest fit */
+  pick: 'first' | 'best'
   sort: (a: NestItem, b: NestItem) => number
 }
 
@@ -145,6 +147,7 @@ class Bin {
         this.push({ x: f.x + r.w, y: f.y, w: rightW, h: f.h })
         this.push({ x: f.x, y: f.y + r.h, w: r.w, h: topH })
       }
+      this.mergeFree()
       return
     }
     const next: Rect[] = []
@@ -161,6 +164,30 @@ class Bin {
     const contains = (b: Rect, a: Rect) => a.x >= b.x && a.y >= b.y && a.x + a.w <= b.x + b.w && a.y + a.h <= b.y + b.h
     // drop rects contained in another one (keep the first of identical duplicates)
     this.free = next.filter((a, i) => a.w > 0.5 && a.h > 0.5 && !next.some((b, j) => j !== i && contains(b, a) && (j < i || !contains(a, b))))
+  }
+
+  /** Join leftover rectangles that share a full edge (still cuttable edge to edge). */
+  private mergeFree() {
+    const eq = (a: number, b: number) => Math.abs(a - b) < 1e-6
+    let merged = true
+    while (merged) {
+      merged = false
+      outer: for (let i = 0; i < this.free.length; i++) {
+        for (let j = i + 1; j < this.free.length; j++) {
+          const a = this.free[i]
+          const b = this.free[j]
+          let m: Rect | null = null
+          if (eq(a.x, b.x) && eq(a.w, b.w) && (eq(a.y + a.h, b.y) || eq(b.y + b.h, a.y))) m = { x: a.x, y: Math.min(a.y, b.y), w: a.w, h: a.h + b.h }
+          else if (eq(a.y, b.y) && eq(a.h, b.h) && (eq(a.x + a.w, b.x) || eq(b.x + b.w, a.x))) m = { x: Math.min(a.x, b.x), y: a.y, w: a.w + b.w, h: a.h }
+          if (m) {
+            this.free.splice(j, 1)
+            this.free[i] = m
+            merged = true
+            break outer
+          }
+        }
+      }
+    }
   }
 
   private push(r: Rect) {
@@ -180,7 +207,8 @@ function heuristics(mode: 'laser' | 'shear', pieceCount: number): Heuristic[] {
   const splits: Split[] = mode === 'laser' ? ['slas'] : ['slas', 'llas', 'h', 'v']
   const sorts = pieceCount > 400 ? SORTS.slice(0, 2) : SORTS
   const out: Heuristic[] = []
-  for (const score of scores) for (const split of splits) for (const sort of sorts) out.push({ score, split, sort })
+  for (const pick of ['first', 'best'] as const)
+    for (const score of scores) for (const split of splits) for (const sort of sorts) out.push({ score, split, sort, pick })
   return out
 }
 
@@ -189,13 +217,11 @@ function packOnce(pieces: NestItem[], binW: number, binH: number, k: number, mar
   const bins: Bin[] = []
   for (const p of sorted) {
     let chosen: { bin: Bin; fit: Fit } | null = null
-    // first sheet that still has room: keeps earlier sheets full and leftovers on the last one
     for (const bin of bins) {
       const fit = bin.find(p.w + k, p.h + k, o.allowRotate)
-      if (fit) {
-        chosen = { bin, fit }
-        break
-      }
+      if (!fit) continue
+      if (!chosen || fit.score1 < chosen.fit.score1 || (fit.score1 === chosen.fit.score1 && fit.score2 < chosen.fit.score2)) chosen = { bin, fit }
+      if (h.pick === 'first') break
     }
     if (!chosen) {
       const bin = new Bin(binW, binH, o.mode, h)

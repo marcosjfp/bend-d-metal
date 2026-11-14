@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { analyzePart, type Analysis } from './engine/bend'
 import type { Part } from './engine/types'
 import { useAppState, type Stock } from './store'
@@ -19,7 +19,22 @@ const TABS: { id: Tab; label: string; icon: string }[] = [
 
 export default function App() {
   const [state, setState] = useAppState()
-  const [tab, setTab] = useState<Tab>('part')
+  const [tab, setTabState] = useState<Tab>(() => {
+    const h = window.location.hash.slice(1)
+    return TABS.some((t) => t.id === h) ? (h as Tab) : 'part'
+  })
+  const setTab = (t: Tab) => {
+    setTabState(t)
+    history.replaceState(null, '', `#${t}`)
+  }
+  useEffect(() => {
+    const onHash = () => {
+      const h = window.location.hash.slice(1)
+      if (TABS.some((t) => t.id === h)) setTabState(h as Tab)
+    }
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
+  }, [])
 
   const part = state.parts.find((p) => p.id === state.activeId) ?? state.parts[0]
 

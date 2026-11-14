@@ -36,6 +36,38 @@ export function initialState(): AppState {
   }
 }
 
+/** Sample job shown on first launch so new users see every feature with real data. */
+export function exampleState(): AppState {
+  const c = {
+    ...newPart('C channel'),
+    thickness: 2,
+    length: 2000,
+    qty: 24,
+    flanges: [15, 50, 100, 50, 15],
+    bends: [
+      { angle: 90, dir: 'up' as const },
+      { angle: 90, dir: 'up' as const },
+      { angle: 90, dir: 'up' as const },
+      { angle: 90, dir: 'up' as const },
+    ],
+  }
+  const angle = { ...newPart('Angle bracket'), thickness: 3, length: 1000, qty: 40, flanges: [50, 50], bends: [{ angle: 90, dir: 'up' as const }] }
+  const hat = {
+    ...newPart('Hat profile'),
+    thickness: 1.5,
+    length: 2500,
+    qty: 12,
+    flanges: [25, 40, 60, 40, 25],
+    bends: [
+      { angle: 90, dir: 'down' as const },
+      { angle: 90, dir: 'up' as const },
+      { angle: 90, dir: 'up' as const },
+      { angle: 90, dir: 'down' as const },
+    ],
+  }
+  return { ...initialState(), parts: [c, angle, hat], activeId: c.id }
+}
+
 function load(): AppState {
   try {
     const raw = localStorage.getItem(KEY)
@@ -55,7 +87,7 @@ function load(): AppState {
   } catch {
     /* corrupted storage: start fresh */
   }
-  return initialState()
+  return exampleState()
 }
 
 export function useAppState() {

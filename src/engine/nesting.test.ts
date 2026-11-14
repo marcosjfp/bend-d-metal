@@ -80,3 +80,20 @@ describe('nest quality', () => {
     expect(r.sheets[0].placements.length).toBeGreaterThanOrEqual(19)
   })
 })
+
+describe('mixed job', () => {
+  const items = [
+    { id: 'c', label: 'C', w: 214.7, h: 2000, qty: 24 },
+    { id: 'a', label: 'A', w: 94, h: 1000, qty: 40 },
+    { id: 'h', label: 'H', w: 178.4, h: 2500, qty: 12 },
+  ]
+  for (const mode of ['shear', 'laser'] as const) {
+    it(`fits the example job on 5 sheets (${mode})`, () => {
+      const o = { ...base, margin: 5, mode }
+      const r = nest(items, o)
+      expect(r.placedCount).toBe(76)
+      expect(r.sheets).toHaveLength(5)
+      assertValid(r.sheets, o)
+    })
+  }
+})
