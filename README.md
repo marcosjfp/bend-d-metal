@@ -2,7 +2,7 @@
 
 **Plan press brake work on your phone before it reaches the machine.**
 
-**▶ Open the app: https://marcosjfp.github.io/bend-d-metal/** (works on any phone, installable, offline)
+**▶ Open the app:** https://marcosjfp.github.io/bend-d-metal/ (GitHub Pages) or https://bend-planner.netlify.app (Netlify). Works on any phone, installable, offline.
 
 Bend Planner is a mobile-first web app for sheet-metal shops. You draw the cross-section of a part. The app tells you the flat blank to cut, which die to use, how much force the bend needs, and whether your press brake can do it. It then animates the bending order on the punch and die, warns about collisions, and nests every blank onto stock sheets with the least waste. It works like a cut-list optimizer, but for bending.
 
@@ -204,7 +204,7 @@ Unit tests cover the bending formulas, die selection, machine limit checks, part
 npm run build
 ```
 
-`dist/` is a fully static site (relative paths, offline service worker). Every push to `main` runs the tests and redeploys GitHub Pages automatically ([.github/workflows/deploy.yml](.github/workflows/deploy.yml)). The same folder can also be hosted on Netlify, Vercel or a shop server.
+`dist/` is a fully static site (relative paths, offline service worker). Every push to `main` runs the tests and redeploys GitHub Pages automatically ([.github/workflows/deploy.yml](.github/workflows/deploy.yml)). It is also deployed on Netlify; build and cache settings are in [netlify.toml](netlify.toml). The same folder can be hosted on Vercel or a shop server too.
 
 ---
 
